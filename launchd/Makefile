@@ -11,6 +11,7 @@ LABELS = de.jochenklar.restic.klarserver.backup \
 deploy: install enable reload
 
 install:
+	mkdir -p ~/.restic
 	cp launchd.sh ~/.restic/launchd.sh
 	for l in $(LABELS); do \
 		sudo cp $$l.plist /Library/LaunchDaemons/$$l.plist; \
