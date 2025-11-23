@@ -1,0 +1,27 @@
+#!/usr/bin/env bash
+
+LOCALHOSTNAME=$(scutil --get LocalHostName)
+
+REPOSITORY=${1:-store}
+
+if [[ "$REPOSITORY" == "store" ]]; then
+    export RESTIC_REPOSITORY=sftp:store:restic/$LOCALHOSTNAME
+
+elif [[ "$REPOSITORY" == "klarserver" ]]; then
+    export RESTIC_REPOSITORY=sftp:klarserver:/tank/restic/$LOCALHOSTNAME
+
+elif [[ "$REPOSITORY" == "ssd" ]]; then
+    export RESTIC_REPOSITORY=/Volumes/2T/restic/$LOCALHOSTNAME
+
+else
+    echo "Invalid argument: $REPOSITORY"
+    exit 1
+
+fi
+
+export RESTIC_HOST=$LOCALHOSTNAME
+export RESTIC_PASSWORD_FILE=/Users/jochen/.restic/pass
+
+echo "RESTIC_REPOSITORY set to: $RESTIC_REPOSITORY"
+echo "RESTIC_HOST set to: $RESTIC_HOST"
+echo "RESTIC_PASSWORD_FILE set to: $RESTIC_PASSWORD_FILE"
