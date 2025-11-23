@@ -1,31 +1,40 @@
 SHELL := /bin/bash
 USER_ID := $(shell id -u)
 
-LABELS = de.jochenklar.restic.store \
-         de.jochenklar.restic.klarserver
+LABELS = de.jochenklar.restic.klarserver.backup \
+         de.jochenklar.restic.klarserver.jochen \
+         de.jochenklar.restic.store.backup \
+         de.jochenklar.restic.store.jochen \
 
-.PHONY: all install reload print run
+.PHONY: all install enable reload print run
 
-deploy: install reload
+deploy: install enable reload
 
 install:
 	cp launchd.sh ~/.restic/launchd.sh
 	for l in $(LABELS); do \
-		cp $$l.plist ~/Library/LaunchAgents/$$l.plist; \
+		sudo cp $$l.plist /Library/LaunchDaemons/$$l.plist; \
+		sudo chown root:wheel /Library/LaunchDaemons/$$l.plist; \
+		sudo chmod 644 /Library/LaunchDaemons/$$l.plist; \
+	done
+
+enable:
+	for l in $(LABELS); do \
+		sudo launchctl enable system/$$l; \
 	done
 
 reload:
 	for l in $(LABELS); do \
-		launchctl bootout gui/$(USER_ID) ~/Library/LaunchAgents/$$l.plist 2> /dev/null || true; \
-		launchctl bootstrap gui/$(USER_ID) ~/Library/LaunchAgents/$$l.plist; \
+		sudo launchctl bootout system /Library/LaunchDaemons/$$l.plist 2> /dev/null || true; \
+		sudo launchctl bootstrap system /Library/LaunchDaemons/$$l.plist; \
 	done
 
 print:
 	for l in $(LABELS); do \
-		launchctl print gui/$(USER_ID)/$$l; \
+		launchctl print system/$$l; \
 	done
 
 run:
 	for l in $(LABELS); do \
-		launchctl kickstart -k gui/$(USER_ID)/$$l; \
+		launchctl kickstart -k system/$$l; \
 	done

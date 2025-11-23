@@ -6,11 +6,14 @@ if ! [[ "$1" == "store" || "$1" == "klarserver" ]]; then
     exit 1
 fi
 
-source $HOME/.restic/env $1
+REPOSITORY=$1
+LABEL="de.jochenklar.restic.$REPOSITORY.$USER"
+
+source $HOME/.restic/env $REPOSITORY
 export PATH=/opt/homebrew/bin:$PATH
 
-mkdir -p $HOME/Library/Logs/de.jochenklar.restic.$1
+mkdir -p $HOME/Library/Logs/$LABEL
 
 $HOME/.restic/backup.sh \
-    >> $HOME/Library/Logs/de.jochenklar.restic.$1/std.out \
-    2>> $HOME/Library/Logs/de.jochenklar.restic.$1/std.err
+    >> $HOME/Library/Logs/$LABEL/std.out \
+    2>> $HOME/Library/Logs/$LABEL/std.err

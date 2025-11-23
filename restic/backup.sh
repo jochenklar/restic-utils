@@ -17,18 +17,28 @@ else
 fi
 
 echo "Running restic backup"
-caffeinate -s restic -r $RESTIC_REPOSITORY backup \
-    $HOME/.bashrc \
-    $HOME/.bashrc.d \
-    $HOME/.password-store \
-    $HOME/.ssh \
-    $HOME/code \
-    $HOME/Documents \
-    $HOME/Library/Thunderbird \
-    $HOME/Pictures \
-    $HOME/readme \
-    $HOME/utils \
-    --exclude-file=$HOME/.restic/exclude
+if [ "$USER" = "jochen" ]; then
+    caffeinate -s restic -r $RESTIC_REPOSITORY backup \
+        $HOME/.bashrc \
+        $HOME/.bashrc.d \
+        $HOME/.password-store \
+        $HOME/.ssh \
+        $HOME/code \
+        $HOME/Documents \
+        $HOME/Library/Thunderbird \
+        $HOME/Pictures \
+        $HOME/readme \
+        $HOME/utils \
+        --exclude-file=$HOME/.restic/exclude
+elif [ "$USER" = "backup" ]; then
+    caffeinate -s restic -r $RESTIC_REPOSITORY backup \
+        $HOME/Backup \
+        --exclude-file=$HOME/.restic/exclude
+else
+    caffeinate -s restic -r $RESTIC_REPOSITORY backup \
+        $HOME/Documents \
+        --exclude-file=$HOME/.restic/exclude
+fi
 
 sleep 1
 
