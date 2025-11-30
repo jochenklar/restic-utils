@@ -16,36 +16,60 @@ else
     exit 1
 fi
 
+# create run file via ssh
+ssh $(echo $RESTIC_REPOSITORY | cut -d':' -f2) -t "touch /tmp/poweroff/${RESTIC_HOST}_$USER" 2> /dev/null
+
 echo "Running restic backup"
 if [ "$USER" = "jochen" ]; then
-    caffeinate -s restic -r $RESTIC_REPOSITORY backup \
-        $HOME/.bashrc \
-        $HOME/.bashrc.d \
-        $HOME/.password-store \
-        $HOME/.ssh \
-        $HOME/code \
-        $HOME/Documents \
-        $HOME/Library/Thunderbird \
-        $HOME/Pictures \
-        $HOME/readme \
-        $HOME/utils \
-        --exclude-file=$HOME/.restic/exclude
+    OUTPUT=$(
+        caffeinate -s restic -r $RESTIC_REPOSITORY backup \
+            $HOME/.bashrc \
+            $HOME/.bashrc.d \
+            $HOME/.password-store \
+            $HOME/.ssh \
+            $HOME/code \
+            $HOME/Documents \
+            $HOME/Library/Thunderbird \
+            $HOME/Pictures \
+            $HOME/readme \
+            $HOME/utils \
+            --exclude-file=$HOME/.restic/exclude \
+        | tee /dev/tty
+    )
 elif [ "$USER" = "backup" ]; then
-    caffeinate -s restic -r $RESTIC_REPOSITORY backup \
-        $HOME/Backup \
-        --exclude-file=$HOME/.restic/exclude
+    OUTPUT=$(
+        caffeinate -s restic -r $RESTIC_REPOSITORY backup \
+            $HOME/Backup \
+            --exclude-file=$HOME/.restic/exclude \
+        | tee /dev/tty
+    )
 else
-    caffeinate -s restic -r $RESTIC_REPOSITORY backup \
-        $HOME/Documents \
-        --exclude-file=$HOME/.restic/exclude
+    OUTPUT=$(
+        caffeinate -s restic -r $RESTIC_REPOSITORY backup \
+            $HOME/Documents \
+            --exclude-file=$HOME/.restic/exclude \
+        | tee /dev/tty
+    )
 fi
 
-sleep 1
+echo "Send notification mail"
+if [ $? -eq 0 ]; then
+    RECIPIENTS="admin@jochenklar.de"
+    SUBJECT="🎉 Restic succeeded for user $USER"
+else
+    RECIPIENTS="admin@jochenklar.de mail@jochenklar.de"
+    SUBJECT="🚨 Restic failed for user $USER"
+fi
+
+msmtp $RECIPIENTS <<EOF
+Subject: $SUBJECT
+
+$OUTPUT
+EOF
 
 echo "Running restic forget"
-caffeinate -s restic -r $RESTIC_REPOSITORY forget \
-    --prune \
-    --keep-daily 7 \
-    --keep-weekly 5 \
-    --keep-monthly 12 \
-    --keep-yearly 100
+caffeinate -s restic -r $RESTIC_REPOSITORY forget --prune \
+    --keep-daily 7 --keep-weekly 5 --keep-monthly 12 --keep-yearly 100
+
+# remove run file via ssh
+ssh $(echo $RESTIC_REPOSITORY | cut -d':' -f2) -t "rm /tmp/poweroff/${RESTIC_HOST}_$USER" 2> /dev/null

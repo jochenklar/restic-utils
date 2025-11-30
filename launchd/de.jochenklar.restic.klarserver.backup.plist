@@ -17,7 +17,7 @@
     <key>StartCalendarInterval</key>
     <dict>
         <key>Hour</key><integer>11</integer>
-        <key>Minute</key><integer>00</integer>
+        <key>Minute</key><integer>02</integer>
     </dict>
 
     <key>WakeForSystem</key>
