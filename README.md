@@ -8,9 +8,11 @@ Setup
 
 1) Setup passphrase-less ssh kley authentication.
 
-2) Run `make` to create all files in `~/.restic` and install `launchd` agents.
+2) Run `make` in `restic` to create all files in `~/.restic`
 
-3) Create `.restic/pass` file containing the key to the restic repo.
+3) Run `make` in `launchd` (needs sudo) to install `launchd` agents.
+
+4) Create `.restic/pass` file containing the key to the restic repo.
 
 
 Usage

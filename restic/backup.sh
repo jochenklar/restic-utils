@@ -20,37 +20,12 @@ fi
 ssh $(echo $RESTIC_REPOSITORY | cut -d':' -f2) -t "touch /tmp/poweroff/${RESTIC_HOST}_$USER" 2> /dev/null
 
 echo "Running restic backup"
-if [ "$USER" = "jochen" ]; then
-    OUTPUT=$(
-        caffeinate -s restic -r $RESTIC_REPOSITORY backup \
-            $HOME/.bashrc \
-            $HOME/.bashrc.d \
-            $HOME/.password-store \
-            $HOME/.ssh \
-            $HOME/code \
-            $HOME/Documents \
-            $HOME/Library/Thunderbird \
-            $HOME/Pictures \
-            $HOME/readme \
-            $HOME/utils \
-            --exclude-file=$HOME/.restic/exclude \
-        | tee /dev/tty
-    )
-elif [ "$USER" = "backup" ]; then
-    OUTPUT=$(
-        caffeinate -s restic -r $RESTIC_REPOSITORY backup \
-            $HOME/Backup \
-            --exclude-file=$HOME/.restic/exclude \
-        | tee /dev/tty
-    )
-else
-    OUTPUT=$(
-        caffeinate -s restic -r $RESTIC_REPOSITORY backup \
-            $HOME/Documents \
-            --exclude-file=$HOME/.restic/exclude \
-        | tee /dev/tty
-    )
-fi
+OUTPUT=$(
+    caffeinate -s restic -r $RESTIC_REPOSITORY backup \
+        --files-from=$HOME/.restic/include/$USER \
+        --exclude-file=$HOME/.restic/exclude \
+    | tee /dev/tty
+)
 
 echo "Send notification mail"
 if [ $? -eq 0 ]; then
