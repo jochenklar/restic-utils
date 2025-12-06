@@ -17,7 +17,8 @@ else
 fi
 
 # create run file via ssh
-ssh $(echo $RESTIC_REPOSITORY | cut -d':' -f2) -t "touch /tmp/poweroff/${RESTIC_HOST}_$USER" 2> /dev/null
+ssh $(echo $RESTIC_REPOSITORY | cut -d':' -f2) \
+    -t "touch /tmp/poweroff/${RESTIC_HOST}_$USER" > /dev/null 2>&1
 
 echo "Running restic backup"
 OUTPUT=$(
@@ -47,4 +48,5 @@ caffeinate -s restic -r $RESTIC_REPOSITORY forget --prune \
     --keep-daily 7 --keep-weekly 5 --keep-monthly 12 --keep-yearly 100
 
 # remove run file via ssh
-ssh $(echo $RESTIC_REPOSITORY | cut -d':' -f2) -t "rm /tmp/poweroff/${RESTIC_HOST}_$USER" 2> /dev/null
+ssh $(echo $RESTIC_REPOSITORY | cut -d':' -f2) \
+    -t "rm /tmp/poweroff/${RESTIC_HOST}_$USER" > /dev/null 2>&1
