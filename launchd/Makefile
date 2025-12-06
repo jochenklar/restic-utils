@@ -1,10 +1,12 @@
 SHELL := /bin/bash
 USER_ID := $(shell id -u)
 
-LABELS = de.jochenklar.restic.klarserver.backup \
+LABELS = de.jochenklar.restic.klarserver.archive \
+         de.jochenklar.restic.klarserver.backup \
          de.jochenklar.restic.klarserver.jochen \
+         de.jochenklar.restic.store.archive \
          de.jochenklar.restic.store.backup \
-         de.jochenklar.restic.store.jochen \
+         de.jochenklar.restic.store.jochen
 
 .PHONY: all install enable reload print run
 
