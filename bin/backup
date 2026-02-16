@@ -1,0 +1,74 @@
+#!/bin/bash
+
+set -o pipefail
+
+RESTIC_HOST=$(scutil --get LocalHostName)
+LOG_FILE=$HOME/.restic/log
+RUN_FILE=$HOME/.restic/run
+RECIPIENTS_FILE=$HOME/.restic/recipients
+INCLUDE_FILE=$HOME/.restic/include
+EXCLUDE_FILE=$HOME/.restic/exclude
+
+# truncate log file
+: > $LOG_FILE
+
+# Check if $RESTIC_REPOSITORY is set
+if [[ -z "$RESTIC_REPOSITORY" ]]; then
+    echo "Missing environment variable: RESTIC_REPOSITORY"
+    exit 1
+fi
+
+# Create remote run file via ssh
+if [[ $RESTIC_REPOSITORY == sftp:* && -f "$RUN_FILE" ]]  ; then
+    RUN=$(<"$RUN_FILE")
+    HOST=$(echo $RESTIC_REPOSITORY | cut -d':' -f2)
+
+    echo "📄 Creating remote runfile at $HOST:$RUN"
+    ssh "$HOST" "touch \"$RUN\"" > /dev/null 2>&1
+    echo
+fi
+
+# Run restic backup
+echo "⚙️ Running restic -r $RESTIC_REPOSITORY backup ..." | tee -a $LOG_FILE
+caffeinate -s \
+    restic -r $RESTIC_REPOSITORY backup \
+    --files-from=$INCLUDE_FILE --exclude-file=$EXCLUDE_FILE \
+    2>&1 | tee -a $LOG_FILE
+echo | tee -a $LOG_FILE
+STATUS=$?
+
+# Run restic forget
+if [[ $STATUS -eq 0 ]]; then
+    echo "⚙️ Running restic -r $RESTIC_REPOSITORY forget ..." | tee -a $LOG_FILE
+    caffeinate -s \
+        restic -r $RESTIC_REPOSITORY forget \
+        --prune --keep-daily 7 --keep-weekly 5 --keep-monthly 12 --keep-yearly 100 \
+        2>&1 | tee -a $LOG_FILE
+    echo | tee -a $LOG_FILE
+fi
+
+# Remove remote run file via ssh
+if [[ -n "$RUN" ]]; then
+    echo "🗑️ Removing remote runfile at $HOST:$RUN ..."
+    ssh "$HOST" "rm -f \"$RUN\"" > /dev/null 2>&1
+    echo
+fi
+
+# Send notification mail
+if [[ -f "$RECIPIENTS_FILE" ]]; then
+    if [[ $STATUS -eq 0 ]]; then
+        SUBJECT="[restic 🟢] $RESTIC_REPOSITORY"
+    else
+        SUBJECT="[restic 🛑] $RESTIC_REPOSITORY"
+    fi
+    MESSAGE=$(<"$LOG_FILE")
+    RECIPIENTS=$(<"$RECIPIENTS_FILE")
+
+    echo "✉️ Sending notification mail to $RECIPIENTS"
+    echo
+    msmtp $RECIPIENTS <<EOF
+Subject: $SUBJECT
+
+$MESSAGE
+EOF
+fi

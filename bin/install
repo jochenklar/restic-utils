@@ -1,0 +1,34 @@
+#!/bin/bash
+
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+RESTIC_DIR=$HOME/.restic
+
+if [ -d "$RESTIC_DIR" ]; then
+    echo "✅ $RESTIC_DIR already exists"
+else
+    echo "📁 Creating $RESTIC_DIR"
+
+    mkdir -p $RESTIC_DIR
+    touch \
+        $RESTIC_DIR/exclude \
+        $RESTIC_DIR/include \
+        $RESTIC_DIR/pass \
+        $RESTIC_DIR/recipients \
+        $RESTIC_DIR/repositories \
+        $RESTIC_DIR/run
+fi
+
+if grep -q 'restic-env()' ~/.bashrc; then
+    echo "✅ Bash functions are already present in ~/.bashrc"
+else
+    echo "🔧 Adding bash functions to ~/.bashrc"
+    cat >> ~/.bashrc <<EOF
+
+restic-env() {
+    source $SCRIPT_DIR/env \$1
+}
+restic-backup() {
+    $SCRIPT_DIR/backup
+}
+EOF
+fi

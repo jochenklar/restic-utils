@@ -1,0 +1,42 @@
+#!/bin/bash
+
+# check if the REPOSITORY_FILE exists
+REPOSITORY_FILE=$HOME/.restic/repositories
+if [[ ! -f "$REPOSITORY_FILE" ]]; then
+    echo "Missing repository file: $REPOSITORY_FILE"
+    return 1
+fi
+
+# check if REPOSITORY was provided
+if [[ -z "$1" ]]; then
+    echo "🔍 Available repositories in $REPOSITORY_FILE:"
+    cat $REPOSITORY_FILE
+    return 1
+else
+    REPOSITORY=$1
+fi
+
+# source the repository file
+source $REPOSITORY_FILE
+
+# get the variable with c as name
+RESTIC_REPOSITORY=${!REPOSITORY}
+
+# check if we found a REPOSITORY
+if [[ -z "$RESTIC_REPOSITORY" ]]; then
+    echo "Invalid repository: $REPOSITORY"
+    return 1
+fi
+
+RESTIC_PASSWORD_FILE=$HOME/.restic/pass
+
+if [[ ! -f "$RESTIC_PASSWORD_FILE" ]]; then
+    echo "Missing password file: $RESTIC_PASSWORD_FILE"
+    return 1
+fi
+
+export RESTIC_REPOSITORY
+export RESTIC_PASSWORD_FILE
+
+echo "➡️ Setting RESTIC_REPOSITORY=$RESTIC_REPOSITORY"
+echo "➡️ Setting RESTIC_PASSWORD_FILE=$RESTIC_PASSWORD_FILE"
