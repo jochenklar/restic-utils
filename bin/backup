@@ -2,6 +2,7 @@
 
 set -o pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 RESTIC_HOST=$(scutil --get LocalHostName)
 LOG_FILE=$HOME/.restic/log
 RUN_FILE=$HOME/.restic/run
@@ -11,6 +12,11 @@ EXCLUDE_FILE=$HOME/.restic/exclude
 
 # truncate log file
 : > $LOG_FILE
+
+if [ -n "$1" ]; then
+    source $SCRIPT_DIR/env $1
+    echo
+fi
 
 # Check if $RESTIC_REPOSITORY is set
 if [[ -z "$RESTIC_REPOSITORY" ]]; then
