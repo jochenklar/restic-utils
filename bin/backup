@@ -38,10 +38,10 @@ fi
 echo "⚙️ Running restic -r $RESTIC_REPOSITORY backup ..." | tee -a $LOG_FILE
 caffeinate -s \
     restic -r $RESTIC_REPOSITORY backup \
-    --files-from=$INCLUDE_FILE --exclude-file=$EXCLUDE_FILE \
+    --host=$RESTIC_HOST --files-from=$INCLUDE_FILE --exclude-file=$EXCLUDE_FILE \
     2>&1 | tee -a $LOG_FILE
-echo | tee -a $LOG_FILE
 STATUS=$?
+echo | tee -a $LOG_FILE
 
 # Run restic forget
 if [[ $STATUS -eq 0 ]]; then
