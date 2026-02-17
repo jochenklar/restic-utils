@@ -4,15 +4,16 @@ set -o pipefail
 
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 RESTIC_HOST=$(scutil --get LocalHostName)
-LOG_FILE=$HOME/.restic/log
 RUN_FILE=$HOME/.restic/run
+LOG_FILE=$HOME/Library/Logs/restic/$(date +"%Y-%m-%dT%H-%M-%S").log
 RECIPIENTS_FILE=$HOME/.restic/recipients
 INCLUDE_FILE=$HOME/.restic/include
 EXCLUDE_FILE=$HOME/.restic/exclude
 
-# truncate log file
-: > $LOG_FILE
+# ensure log dir exists
+mkdir -p "$(dirname "$LOG_FILE")"
 
+# source the environment if argument was provided
 if [ -n "$1" ]; then
     source $SCRIPT_DIR/env $1
     echo
